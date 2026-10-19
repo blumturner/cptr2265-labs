@@ -1,1 +1,1 @@
-This line was changed by branch A.
+This conflict was intentionally resolved between branches A and B.
