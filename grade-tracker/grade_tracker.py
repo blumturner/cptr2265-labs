@@ -151,12 +151,15 @@ def view_courses():
 
 
 def calculate_course_average(assignments):
-    grades = [grade for grade in assignments.values() if grade is not None]
+    graded_assignments = [
+        grade for grade in assignments.values()
+        if grade is not None
+    ]
 
-    if not grades:
+    if not graded_assignments:
         return 0
 
-    return sum(grades) / len(grades)
+    return sum(graded_assignments) / len(graded_assignments)
 
 def main():
     while True:
