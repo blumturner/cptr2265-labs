@@ -150,6 +150,14 @@ def view_courses():
                 print(f"  {assignment_name}: {grade}")
 
 
+def calculate_course_average(assignments):
+    grades = [grade for grade in assignments.values() if grade is not None]
+
+    if not grades:
+        return 0
+
+    return sum(grades) / len(grades)
+
 def main():
     while True:
         print("\n===== GRADE TRACKER =====")
