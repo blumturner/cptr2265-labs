@@ -1,5 +1,6 @@
 import pytest
 import grade_tracker
+import json
 
 
 @pytest.fixture(autouse=True)
@@ -370,3 +371,84 @@ def test_calculate_course_average_ignores_ungraded():
     }
 
     assert grade_tracker.calculate_course_average(assignments) == 90
+
+def test_load_data_valid_json(tmp_path, monkeypatch):
+    data_file = tmp_path / "grades.json"
+
+    expected = {
+        "CPTR 2265": {
+            "assignments": {
+                "Lab 1": 90
+            }
+        }
+    }
+
+    with open(data_file, "w") as file:
+        json.dump(expected, file)
+
+    monkeypatch.setattr(grade_tracker, "DATA_FILE", str(data_file))
+
+    assert grade_tracker.load_data() == expected
+
+
+def test_load_data_missing_file(tmp_path, monkeypatch):
+    data_file = tmp_path / "missing.json"
+
+    monkeypatch.setattr(grade_tracker, "DATA_FILE", str(data_file))
+
+    assert grade_tracker.load_data() == {}
+
+
+def test_load_data_invalid_json(tmp_path, monkeypatch):
+    data_file = tmp_path / "grades.json"
+    data_file.write_text("{invalid json")
+
+    monkeypatch.setattr(grade_tracker, "DATA_FILE", str(data_file))
+
+    assert grade_tracker.load_data() == {}
+
+
+def test_save_data(tmp_path, monkeypatch, capsys):
+    data_file = tmp_path / "grades.json"
+
+    monkeypatch.setattr(grade_tracker, "DATA_FILE", str(data_file))
+
+    grade_tracker.courses = {
+        "CPTR 2265": {
+            "assignments": {
+                "Lab 1": 90
+            }
+        }
+    }
+
+    grade_tracker.save_data()
+
+    with open(data_file, "r") as file:
+        saved_data = json.load(file)
+
+    assert saved_data == grade_tracker.courses
+    assert "Data saved." in capsys.readouterr().out
+
+
+def test_main_menu_options(monkeypatch):
+    choices = iter(["1", "2", "3", "4", "5", "6", "9", "7"])
+
+    monkeypatch.setattr("builtins.input", lambda _: next(choices))
+
+    monkeypatch.setattr(grade_tracker, "add_course", lambda: None)
+    monkeypatch.setattr(grade_tracker, "remove_course", lambda: None)
+    monkeypatch.setattr(grade_tracker, "add_assignment", lambda: None)
+    monkeypatch.setattr(grade_tracker, "edit_assignment", lambda: None)
+    monkeypatch.setattr(grade_tracker, "enter_grade", lambda: None)
+    monkeypatch.setattr(grade_tracker, "view_courses", lambda: None)
+    monkeypatch.setattr(grade_tracker, "save_data", lambda: None)
+
+    grade_tracker.main()
+
+
+def test_main_exit_without_saving(monkeypatch, capsys):
+    monkeypatch.setattr("builtins.input", lambda _: "8")
+
+    grade_tracker.main()
+
+    assert "Goodbye!" in capsys.readouterr().out
