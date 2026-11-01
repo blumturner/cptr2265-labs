@@ -1,7 +1,7 @@
 import pytest
 import grade_tracker
 import json
-
+from unittest.mock import mock_open, patch
 
 @pytest.fixture(autouse=True)
 def reset_courses():
@@ -452,3 +452,85 @@ def test_main_exit_without_saving(monkeypatch, capsys):
     grade_tracker.main()
 
     assert "Goodbye!" in capsys.readouterr().out
+
+def test_save_data_uses_mocked_file():
+    fake_file = mock_open()
+
+    with patch("builtins.open", fake_file):
+        grade_tracker.courses = {
+            "CS101": {
+                "assignments": {}
+            }
+        }
+        grade_tracker.save_data()
+
+    fake_file.assert_called_once_with("grades.json", "w")
+
+def test_save_and_load_data_integration(tmp_path):
+    data_file = tmp_path / "grades.json"
+
+    original_file = grade_tracker.DATA_FILE
+    grade_tracker.DATA_FILE = str(data_file)
+
+    grade_tracker.courses = {
+        "CS101": {
+            "assignments": {
+                "Lab 1": 90
+            }
+        }
+    }
+
+    grade_tracker.save_data()
+
+    loaded_data = grade_tracker.load_data()
+
+    assert loaded_data == grade_tracker.courses
+
+    grade_tracker.DATA_FILE = original_file
+
+
+def test_add_course_and_save_integration(tmp_path, monkeypatch):
+    data_file = tmp_path / "grades.json"
+
+    monkeypatch.setattr(grade_tracker, "DATA_FILE", str(data_file))
+    grade_tracker.courses = {}
+
+    monkeypatch.setattr("builtins.input", lambda _: "CS101")
+
+    grade_tracker.add_course()
+
+    grade_tracker.save_data()
+    loaded_data = grade_tracker.load_data()
+
+    assert "CS101" in loaded_data
+
+
+def test_multiple_courses_save_and_load_integration(tmp_path):
+    data_file = tmp_path / "grades.json"
+
+    original_file = grade_tracker.DATA_FILE
+    grade_tracker.DATA_FILE = str(data_file)
+
+    grade_tracker.courses = {
+        "CS101": {
+            "assignments": {
+                "Lab 1": 90,
+                "Lab 2": 85
+            }
+        },
+        "CS102": {
+            "assignments": {
+                "Project": 95
+            }
+        }
+    }
+
+    grade_tracker.save_data()
+    loaded_data = grade_tracker.load_data()
+
+    assert "CS101" in loaded_data
+    assert "CS102" in loaded_data
+    assert loaded_data["CS101"]["assignments"]["Lab 1"] == 90
+    assert loaded_data["CS102"]["assignments"]["Project"] == 95
+
+    grade_tracker.DATA_FILE = original_file
