@@ -1,3 +1,7 @@
+!\[Grade Tracker CI](https://github.com/blumturner/cptr2265-labs/actions/workflows/ci.yml/badge.svg?branch=main)
+
+# 
+
 # cptr2265-labs
 
 me:
@@ -6,3 +10,4 @@ I would like to improve my ability to design software and become more comfortabl
 
 Chapter 1 Reflection:
 I think the most difficult aspect of software engineering for me would be creating the initial design. Just like in creative writing classes and my experience from previous courses at M state, starting tends to be the hardest because of the many ways to solve problems. However, once I get general understanding and structure, I can flow through the rest easier.
+
